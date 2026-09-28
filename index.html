@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Monofásico PIS/COFINS e ST ICMS-SP · Simples Nacional</title>
+  <style>
+    :root {
+      --bg: #f4f1ea; --bg-2: #ebe6db; --paper: #fffdf8; --ink: #1c1915;
+      --muted: #6b6458; --line: #e0d8c8; --brand: #1f4d3a; --brand-2: #2d6a4f;
+      --accent: #c45c26; --ok: #1b7f5a; --warn: #9a6b12; --danger: #9b2c2c;
+      --shadow: 0 10px 30px rgba(28,25,21,.08); --radius: 16px;
+      --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+      --sans: "Source Serif 4", Georgia, serif;
+      --ui: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--ui); }
+    .wrap { max-width: 1220px; margin: 0 auto; padding: 28px 20px 80px; }
+    header.app { padding: 24px 0 16px; border-bottom: 1px solid var(--line); margin-bottom: 20px; }
+    .eyebrow { font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--brand); font-weight: 700; }
+    h1 { font-family: var(--sans); font-weight: 600; font-size: clamp(26px, 4vw, 40px); line-height: 1.15; margin: 6px 0 0; }
+    .lead { color: var(--muted); max-width: 78ch; font-size: 16px; line-height: 1.55; }
+    .disclaimer, .alert {
+      padding: 13px 15px; border-radius: 12px; font-size: 13.5px; line-height: 1.5; margin: 12px 0 0;
+    }
+    .disclaimer { background: #fff7e8; border: 1px solid #ead7a8; color: #5c4710; }
+    .alert { background: #fdecea; border: 1px solid #f0c2bc; color: #6b1d1d; }
+    .grid-2 { display: grid; grid-template-columns: 1.15fr .85fr; gap: 16px; }
+    @media (max-width: 900px) { .grid-2 { grid-template-columns: 1fr; } }
+    .card { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 18px; }
+    .card h2 { font-size: 14px; margin: 0 0 12px; letter-spacing: .04em; text-transform: uppercase; color: var(--brand); }
+    .drop { border: 1.5px dashed #b9b09d; border-radius: 14px; padding: 26px 16px; text-align: center; background: linear-gradient(180deg,#fff,#faf7f0); cursor: pointer; }
+    .drop.drag { border-color: var(--brand-2); background: #eef6f1; }
+    .drop p { margin: 6px 0 0; color: var(--muted); font-size: 14px; }
+    input[type=file] { display: none; }
+    .btn { appearance: none; border: 0; cursor: pointer; border-radius: 10px; padding: 10px 14px; font-weight: 650; font-size: 14px; font-family: var(--ui); }
+    .btn-primary { background: var(--brand); color: #fff; }
+    .btn-ghost { background: transparent; color: var(--brand); border: 1px solid var(--line); }
+    .btn-accent { background: var(--accent); color: #fff; }
+    .btn:disabled { opacity: .45; cursor: not-allowed; }
+    .row-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+    .meta { font-size: 13px; color: var(--muted); line-height: 1.55; }
+    .meta code, code { font-family: var(--mono); font-size: 12px; background: var(--bg-2); padding: 1px 5px; border-radius: 4px; }
+    .kpis { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin: 18px 0; }
+    @media (max-width: 800px) { .kpis { grid-template-columns: 1fr 1fr; } }
+    .kpi { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; }
+    .kpi .lbl { font-size: 11.5px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
+    .kpi .val { font-family: var(--sans); font-size: 22px; margin-top: 4px; font-weight: 600; }
+    .kpi.mono .val { color: var(--accent); }
+    .kpi.st .val { color: #1d4e89; }
+    .hint { font-size: 12px; color: var(--muted); margin-top: 4px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { text-align: left; padding: 8px 7px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    th { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); cursor: pointer; user-select: none; }
+    th.num, td.num { text-align: right; font-variant-numeric: tabular-nums; font-family: var(--mono); font-size: 12px; }
+    tbody tr:hover { background: #faf6ee; }
+    .badge { display: inline-block; font-size: 10.5px; font-weight: 700; padding: 2px 7px; border-radius: 999px; background: var(--bg-2); margin: 1px 2px 1px 0; }
+    .c-comb{background:#efe4c8} .c-med{background:#dceee6} .c-perf{background:#f3dce8}
+    .c-beb{background:#d7e8f5} .c-vei{background:#e4e0f4} .c-pneu{background:#eadfd0} .c-auto{background:#f6e4d4}
+    .c-st{background:#d7e4f5;color:#14365e} .c-off{background:#f3d0d0;color:#6b1d1d}
+    .toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
+    .toolbar input[type=search], .toolbar select, .toolbar input[type=date] {
+      border: 1px solid var(--line); border-radius: 10px; padding: 8px 11px; font: inherit; background: #fff;
+    }
+    .toolbar input[type=search] { flex: 1; min-width: 180px; }
+    .empty { color: var(--muted); padding: 24px 8px; text-align: center; }
+    details.legal { margin-top: 16px; background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 4px 16px 10px; }
+    details.legal summary { cursor: pointer; padding: 12px 0; font-weight: 700; color: var(--brand); }
+    details.legal p, details.legal li { color: #3f3a33; font-size: 14.5px; line-height: 1.55; }
+    .files { font-size: 13px; margin-top: 10px; max-height: 140px; overflow: auto; }
+    .files li { display: flex; justify-content: space-between; gap: 8px; padding: 3px 0; border-bottom: 1px dashed var(--line); }
+    footer { margin-top: 28px; color: var(--muted); font-size: 12.5px; line-height: 1.5; }
+    .progress { height: 6px; background: var(--bg-2); border-radius: 99px; overflow: hidden; margin-top: 8px; }
+    .progress > span { display: block; height: 100%; background: var(--accent); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="app">
+      <div class="eyebrow">Simples Nacional · PGDAS-D · ICMS-ST São Paulo</div>
+      <h1>Receitas monofásicas e substituição tributária</h1>
+      <p class="lead">
+        Importe XMLs de NF-e/NFC-e de venda. O aplicativo classifica, no navegador,
+        <strong>PIS/COFINS monofásico</strong> (leis federais e tabelas 4.3.10/4.3.11) e
+        <strong>ICMS-ST no Estado de São Paulo</strong> pela Portaria CAT 68/2019, com as alterações até a
+        Portaria SRE-34/26 (DOE 30-06-2026).
+      </p>
+      <div class="alert">
+        <strong>Vigência em 25/09/2026.</strong> Já saíram da ST-SP: medicamentos (Anexo IX, 01/01/2026),
+        bebidas alcoólicas (X), lâmpadas (XV), artefatos de papel (XX), sorvete (IV, 01/07/2026),
+        perfumaria/higiene (XI, 01/04/2026), ração e limpeza (XII e XIII, 01/08/2026) e águas minerais do Anexo III (01/07/2026).
+        <strong>Em 01/10/2026</strong> saem pneus (VII), tintas (VIII), autopeças (XIV), ferramentas (XVIII),
+        materiais elétricos (XXI) e vários eletrodomésticos do Anexo XXII (SRE-34/26).
+      </div>
+      <div class="disclaimer">
+        <strong>Aviso:</strong> não substitui parecer contábil. Monofasia de PIS/COFINS e ST de ICMS são regimes distintos —
+        a CAT 68 não define monofasia federal. Autopeças da Lei 10.485/2002 (PIS/COFINS) não coincidem com o Anexo XIV da CAT 68.
+        A lista por prefixo de NCM não cobre “Ex” da TIPI, destinação nem MVA. Confira o CEST da nota e o anexo vigente na data da operação.
+      </div>
+    </header>
+
+    <div class="grid-2">
+      <section class="card">
+        <h2>1. Importar XMLs</h2>
+        <label class="drop" id="drop" for="files">
+          <strong>Arraste os arquivos aqui ou clique para selecionar</strong>
+          <p>Vários <code>.xml</code> de NF-e / NFC-e (<code>nfeProc</code> ou <code>NFe</code>). Processamento local.</p>
+        </label>
+        <input id="files" type="file" accept=".xml,text/xml,application/xml" multiple />
+        <div class="row-actions">
+          <button class="btn btn-primary" id="btnProcess" disabled>Processar arquivos</button>
+          <button class="btn btn-ghost" id="btnClear" disabled>Limpar</button>
+          <button class="btn btn-accent" id="btnCsv" disabled>Exportar CSV</button>
+        </div>
+        <ul class="files" id="fileList"></ul>
+      </section>
+      <section class="card">
+        <h2>2. Emitente e recorte</h2>
+        <div class="meta" id="emitBox">Nenhum XML processado.</div>
+        <p class="meta" style="margin-top:12px">
+          Valor líquido = <code>vProd − vDesc</code>. Só CFOP 5xxx/6xxx.
+          A ST-SP usa a <em>data de emissão</em> da nota para aplicar anexos já revogados ou ainda vigentes.
+        </p>
+      </section>
+    </div>
+
+    <div class="kpis" id="kpis" hidden>
+      <div class="kpi"><div class="lbl">Receita total (saídas)</div><div class="val" id="kpiTotal">R$ 0,00</div><div class="hint" id="kpiNotas"></div></div>
+      <div class="kpi mono"><div class="lbl">PIS/COFINS monofásico</div><div class="val" id="kpiMono">R$ 0,00</div><div class="hint" id="kpiMonoPct"></div><div class="progress"><span id="barMono"></span></div></div>
+      <div class="kpi st"><div class="lbl">ICMS-ST SP (CAT 68 vigente na data)</div><div class="val" id="kpiSt">R$ 0,00</div><div class="hint" id="kpiStPct"></div></div>
+      <div class="kpi"><div class="lbl">Demais receitas (sem mono)</div><div class="val" id="kpiOutras">R$ 0,00</div><div class="hint">Parcela de PIS/COFINS no DAS</div></div>
+    </div>
+
+    <section class="card" id="catCard" hidden style="margin-bottom:16px">
+      <h2>Totais por categoria monofásica (PIS/COFINS)</h2>
+      <table><thead><tr><th>Categoria</th><th class="num">Itens</th><th class="num">Qtd</th><th class="num">Valor líq.</th></tr></thead><tbody id="catBody"></tbody></table>
+    </section>
+    <section class="card" id="stCard" hidden style="margin-bottom:16px">
+      <h2>Totais de ICMS-ST São Paulo por anexo da CAT 68/2019</h2>
+      <table><thead><tr><th>Anexo</th><th>Segmento</th><th class="num">Itens</th><th class="num">Valor líq.</th><th>Situação na data da nota</th></tr></thead><tbody id="stBody"></tbody></table>
+    </section>
+
+    <section class="card" id="tableCard" hidden>
+      <h2>Itens classificados</h2>
+      <div class="toolbar">
+        <input type="search" id="q" placeholder="Filtrar produto, NCM, CEST, nota…" />
+        <select id="filtro">
+          <option value="interesse">monofásicos ou ST-SP</option>
+          <option value="mono">só monofásicos PIS/COFINS</option>
+          <option value="st">só ST-SP vigente</option>
+          <option value="todos">todos os itens de saída</option>
+        </select>
+      </div>
+      <div style="overflow:auto">
+        <table>
+          <thead>
+            <tr>
+              <th data-k="nota">Nota</th>
+              <th data-k="data">Data</th>
+              <th data-k="produto">Produto</th>
+              <th data-k="ncm">NCM</th>
+              <th data-k="cestNota">CEST nota</th>
+              <th data-k="categoria">PIS/COFINS</th>
+              <th data-k="stNome">ST-SP</th>
+              <th class="num" data-k="qtd">Qtd</th>
+              <th class="num" data-k="valor">Valor líq.</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+      <p class="empty" id="emptyTbl" hidden>Nenhum item neste filtro.</p>
+    </section>
+
+    <details class="legal" open>
+      <summary>PGDAS-D, monofasia e o que mudou na CAT 68</summary>
+      <p>
+        No <strong>PGDAS-D</strong>, a receita monofásica de PIS/COFINS deve ser segregada para
+        <strong>zerar os percentuais de PIS e COFINS no DAS</strong> (art. 18, § 4º-A, I, da LC 123/2006).
+        A receita com ICMS-ST também é segregada no PGDAS-D, mas para o ICMS — não use a CAT 68 para zerar PIS/COFINS.
+      </p>
+      <p><strong>Monofasia federal (inalterada nesta atualização):</strong> Leis 9.718/1998, 10.147/2000, 10.485/2002, 10.833/2003 e 13.097/2015 + tabelas 4.3.10 e 4.3.11.</p>
+      <p><strong>ST ICMS-SP atualizada pelo PDF anexo</strong> (Portaria CAT 68/2019 compilada até SRE-34/26):</p>
+      <ul>
+        <li>Anexos <strong>ainda vigentes em 25/09/2026</strong>: I fumo, II cimento, III bebidas frias (sem as águas revogadas em 01/07/2026), V motos, VI veículos novos, VII pneus, VIII tintas, XIV autopeças, XVI alimentos (itens não revogados), XVII construção, XVIII ferramentas, XXI materiais elétricos, XXII eletrônicos (itens não revogados).</li>
+        <li>Anexos <strong>já revogados</strong>: IV sorvete; IX medicamentos; X bebidas alcoólicas; XI perfumaria/cosméticos/higiene; XII ração pet; XIII produtos de limpeza; XV lâmpadas; XIX; XX papel.</li>
+        <li>Anexos VII, VIII, XIV, XVIII, XXI e parte do XXII <strong>deixam de vigorar em 01/10/2026</strong> (SRE-34/26).</li>
+      </ul>
+      <p>A classificação de ST usa o CEST da nota, se houver; senão, o prefixo de NCM do anexo vigente na data de emissão. Autopeças do Anexo XIV são bem mais amplas que os Anexos I/II da Lei 10.485/2002.</p>
+    </details>
+    <footer>
+      Processamento no navegador. Fontes: tabelas 4.3.10/4.3.11 da EFD-Contribuições e Portaria CAT 68/2019 (SEFAZ-SP), com CAT-17/20, CAT-57/21, CAT-91/21, CAT-101/21, SRE-18/22, 46/22, 69/22, 74/22, 89/22, 31/23, 58/23, 04/24, 33/24, 62/24, 3/25, 64/25, 85/25, 94/25, 09/26, 19/26, 20/26 e 34/26.
+    </footer>
+  </div>
+<script>
+(() => {
+  const BRL = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
+  const N3 = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 4 });
+  const DTF = new Intl.DateTimeFormat("pt-BR");
+
+  const CATS = {
+    combustiveis: "Combustíveis",
+    medicamentos: "Medicamentos",
+    perfumaria: "Perfumaria / cosméticos / higiene",
+    bebidas: "Bebidas frias",
+    veiculos: "Veículos",
+    pneus: "Pneus / câmaras",
+    autopecas: "Autopeças"
+  };
+  const CAT_CLASS = {
+    combustiveis:"c-comb", medicamentos:"c-med", perfumaria:"c-perf",
+    bebidas:"c-beb", veiculos:"c-vei", pneus:"c-pneu", autopecas:"c-auto"
+  };
+
+  const MONO = [
+    ["27101259","combustiveis"],["27101159","combustiveis"],["27101921","combustiveis"],
+    ["27101911","combustiveis"],["27111910","combustiveis"],["271012","combustiveis"],
+    ["38260000","combustiveis"],["3826","combustiveis"],["38249029","combustiveis"],
+    ["220710","combustiveis"],["2207201","combustiveis"],["2207","combustiveis"],
+    ["30051010","medicamentos"],["30066000","medicamentos"],["3006301","medicamentos"],
+    ["3006302","medicamentos"],["30029020","medicamentos"],["30029092","medicamentos"],
+    ["30029099","medicamentos"],["3002101","medicamentos"],["3002102","medicamentos"],
+    ["3002103","medicamentos"],["3002201","medicamentos"],["3002202","medicamentos"],
+    ["3001","medicamentos"],["3003","medicamentos"],["3004","medicamentos"],
+    ["34011190","perfumaria"],["34012010","perfumaria"],["96032100","perfumaria"],
+    ["3303","perfumaria"],["3304","perfumaria"],["3305","perfumaria"],["3306","perfumaria"],["3307","perfumaria"],
+    ["21069010","bebidas"],["2201","bebidas"],["2202","bebidas"],["2203","bebidas"],
+    ["4011","pneus"],["4013","pneus"],
+    ["87162000","veiculos"],["84324000","veiculos"],["84328000","veiculos"],
+    ["84333000","veiculos"],["84334000","veiculos"],["76129012","veiculos"],
+    ["843320","veiculos"],["84335","veiculos"],["842481","veiculos"],["731029","veiculos"],
+    ["7309","veiculos"],["8429","veiculos"],["8701","veiculos"],["8702","veiculos"],
+    ["8703","veiculos"],["8704","veiculos"],["8705","veiculos"],["8706","veiculos"],
+    ["40161010","autopecas"],["40169990","autopecas"],["70071100","autopecas"],["70072100","autopecas"],
+    ["70091000","autopecas"],["73201000","autopecas"],["83012000","autopecas"],["83023000","autopecas"],
+    ["84073390","autopecas"],["84073490","autopecas"],["84139100","autopecas"],["84148021","autopecas"],
+    ["84148022","autopecas"],["84212300","autopecas"],["84213100","autopecas"],["84314100","autopecas"],
+    ["84314200","autopecas"],["84339090","autopecas"],["84832000","autopecas"],["850710","autopecas"],
+    ["85123000","autopecas"],["85129000","autopecas"],["85365090","autopecas"],["85443000","autopecas"],
+    ["90292010","autopecas"],["90299010","autopecas"],["90303921","autopecas"],["90318040","autopecas"],
+    ["91040000","autopecas"],["94012000","autopecas"],["840820","autopecas"],["840991","autopecas"],
+    ["840999","autopecas"],["841330","autopecas"],["841520","autopecas"],["848310","autopecas"],
+    ["848330","autopecas"],["848340","autopecas"],["848350","autopecas"],["850520","autopecas"],
+    ["851220","autopecas"],["851240","autopecas"],["85272","autopecas"],["853910","autopecas"],
+    ["9032892","autopecas"],["6813","autopecas"],["8511","autopecas"],["8707","autopecas"],["8708","autopecas"],
+    ["84089090","autopecas"],["84122110","autopecas"],["84122190","autopecas"],["84123110","autopecas"],
+    ["84136019","autopecas"],["84148019","autopecas"],["84149039","autopecas"],["84329000","autopecas"],
+    ["84811000","autopecas"],["84812090","autopecas"],["84818092","autopecas"],["8483601","autopecas"],
+    ["85011019","autopecas"],["4009","autopecas"]
+  ];
+  const EXCLUDE_MONO = new Set(["30039056","30049046"]);
+
+  /* ST-SP — CAT 68/2019 atualizada até SRE-34/26.
+     ini/fim em ISO. Sem fim = ainda vigente. */
+  const ANEXOS = {
+    I:   { nome: "Fumo", fim: null },
+    II:  { nome: "Cimento", fim: null },
+    III: { nome: "Cerveja, chope, refrigerante e outras bebidas", fim: null },
+    V:   { nome: "Motocicleta nova", fim: null },
+    VI:  { nome: "Veículo automotor novo", fim: null },
+    VII: { nome: "Pneus, câmaras e protetores", fim: "2026-10-01" },
+    VIII:{ nome: "Tintas e vernizes", fim: "2026-10-01" },
+    XIV: { nome: "Autopeças", fim: "2026-10-01" },
+    XVI: { nome: "Indústria alimentícia", fim: null },
+    XVII:{ nome: "Materiais de construção", fim: null },
+    XVIII:{ nome: "Ferramentas", fim: "2026-10-01" },
+    XXI: { nome: "Materiais elétricos", fim: "2026-10-01" },
+    XXII:{ nome: "Eletrônicos e eletrodomésticos", fim: null }
+  };
+
+  // [ncmPrefix, cestDigits ou "", anexo, itemFim opcional]
+  const ST = [];
+  function add(anexo, ncmList, cest, itemFim) {
+    const cs = String(cest || "").replace(/\D/g, "");
+    for (const n of ncmList) ST.push([String(n).replace(/\D/g, ""), cs, anexo, itemFim || null]);
+  }
+
+  add("I", ["2402"], "0400100");
+  add("I", ["24031"], "0400200");
+  add("II", ["2523"], "0500100");
+
+  // Anexo III — águas 2201 revogadas em 01/07/2026 (SRE-09/26)
+  add("III", ["220110","220190","2201"], "0300600", "2026-07-01");
+  add("III", ["220210"], "0301000");
+  add("III", ["220210","220299"], "0301001");
+  add("III", ["220210","220299"], "0301002");
+  add("III", ["2202"], "0301100");
+  add("III", ["2202"], "0301101");
+  add("III", ["21069010"], "0301200");
+  add("III", ["21069010"], "0301201");
+  add("III", ["210690","220299"], "0301300");
+  add("III", ["210690","220299"], "0301500");
+  add("III", ["220300"], "0302100");
+  add("III", ["220291"], "0302200");
+  add("III", ["220300"], "0302300");
+
+  add("V", ["8711"], "2600100");
+  add("VI", ["8702","8703","870421","870431"], "2500300");
+
+  add("VII", ["401110"], "1600100");
+  add("VII", ["401140"], "1600300");
+  add("VII", ["401150"], "1600500");
+  add("VII", ["4011"], "1600400");
+  add("VII", ["401290"], "1600700");
+  add("VII", ["401320"], "1600900");
+  add("VII", ["4013"], "1600800");
+
+  add("VIII", ["3208","3209","321000"], "2400100");
+  add("VIII", ["2821","320417","3206"], "2400200");
+  add("VIII", ["3204","320500","3206","3212"], "2400300");
+
+  // Anexo XIV — extraído do PDF (itens 1–127). Vidros 700711/700721 revogados em 01/01/2026.
+  const XIV = [
+    ["381512","0100100"],["3917","0100200"],["39181000","0100300"],["39233000","0100400"],
+    ["39263000","0100500"],["40103","0100600"],["59100000","0100600"],["40169300","0100700"],
+    ["4823909","0100700"],["40161010","0100800"],["40169990","0100900"],["57050000","0100900"],
+    ["59039000","0101000"],["59090000","0101100"],["63061","0101200"],["65061000","0101300"],
+    ["6813","0101400"],["70091000","0101600"],["70140000","0101700"],["73110000","0101800"],
+    ["7320","0102000"],["7325","0102100"],["780600","0102200"],["80070090","0102300"],
+    ["830120","0102400"],["830160","0102400"],["830170","0102500"],["83021000","0102600"],
+    ["83023000","0102600"],["831000","0102700"],["84073","0102800"],["840820","0102900"],
+    ["84099","0103000"],["84122","0103100"],["841330","0103200"],["84141000","0103300"],
+    ["8414801","0103400"],["8414802","0103400"],["84139190","0103500"],["84149010","0103500"],
+    ["8414903","0103500"],["841520","0103600"],["84212300","0103700"],["84212990","0103800"],
+    ["84219","0103900"],["84241000","0104000"],["84213100","0104100"],["84213200","0104200"],
+    ["84254200","0104300"],["84311010","0104400"],["8431492","0104500"],["84339090","0104501"],
+    ["84811000","0104600"],["84812","0104700"],["84818092","0104800"],["8482","0104900"],
+    ["8483","0105000"],["8484","0105100"],["850520","0105200"],["850710","0105300"],
+    ["8511","0105400"],["851220","0105500"],["851240","0105500"],["85129000","0105500"],
+    ["85171410","0105600"],["8518","0105700"],["851981","0105900"],["8525501","0106000"],
+    ["85256010","0106000"],["85272100","0106100"],["85272900","0106200"],["85219090","0106201"],
+    ["852910","0106300"],["853400","0106400"],["853530","0106500"],["853650","0106500"],
+    ["85361000","0106600"],["85362000","0106700"],["85364","0106800"],["8538","0106900"],
+    ["853910","0107000"],["85392","0107100"],["85442000","0107200"],["85443000","0107300"],
+    ["8707","0107400"],["8708","0107500"],["87141","0107600"],["87169090","0107700"],
+    ["902610","0107800"],["902620","0107900"],["9029","0108000"],["90303321","0108100"],
+    ["90318040","0108200"],["9032892","0108300"],["91040000","0108400"],["94012000","0108500"],
+    ["94019900","0108500"],["96138000","0108600"],["4009","0108700"],["45049000","0108800"],
+    ["68129910","0108800"],["48234000","0108900"],["391910","0109000"],["391990","0109000"],
+    ["84123110","0109100"],["84131900","0109200"],["84135090","0109200"],["84138100","0109200"],
+    ["84136019","0109300"],["84137010","0109300"],["84145910","0109400"],["84213990","0109500"],
+    ["85011019","0109600"],["85013110","0109700"],["85045000","0109800"],["850720","0109900"],
+    ["850730","0109900"],["85123000","0110000"],["9032898","0110100"],["9032899","0110100"],
+    ["90271000","0110200"],["40081100","0110300"],["56012219","0110400"],["57032900","0110500"],
+    ["57033900","0110600"],["59119000","0110700"],["69039099","0110800"],["70072900","0110900"],
+    ["73151100","0111100"],["84189900","0111300"],["841950","0111400"],["84249090","0111500"],
+    ["84254910","0111600"],["84314100","0111700"],["85016100","0111800"],["85311090","0111900"],
+    ["90141000","0112000"],["90251990","0112100"],["90259010","0112200"],["902690","0112300"],
+    ["90321010","0112400"],["90321090","0112500"],["90322000","0112600"]
+  ];
+  XIV.forEach(([n,c]) => add("XIV", [n], c));
+  add("XIV", ["70071100","70072100"], "0101500", "2026-01-01");
+
+  add("XVI", ["17049010","1806"], "1700100");
+  add("XVII", ["2523"], "1000100");
+  add("XVIII", ["8201","8202","8203","8204","8205"], "2000100");
+  add("XXI", ["8544","8546","8547","7605","7614"], "1200700");
+  add("XXII", ["73211100","73218100","73219000"], "2100100");
+  add("XXII", ["84181000","84182100","84182900","84183000","84184000","841850"], "2100200", "2026-10-01");
+
+  ST.sort((a,b) => b[0].length - a[0].length);
+
+  const CEST_IDX = new Map();
+  for (const row of ST) {
+    if (row[1]) {
+      if (!CEST_IDX.has(row[1])) CEST_IDX.set(row[1], []);
+      CEST_IDX.get(row[1]).push(row);
+    }
+  }
+
+  function digits(s) { return String(s || "").replace(/\D/g, ""); }
+  function ymd(d) {
+    if (!d) return "";
+    if (d instanceof Date && !Number.isNaN(+d)) return d.toISOString().slice(0,10);
+    return String(d).slice(0,10);
+  }
+  function vigente(fim, dataNota) {
+    if (!fim) return true;
+    const dn = ymd(dataNota) || "9999-12-31";
+    return dn < fim;
+  }
+  function classifyMono(ncm) {
+    const n = digits(ncm);
+    if (!n || EXCLUDE_MONO.has(n)) return null;
+    for (const [p, cat] of MONO) if (n.startsWith(p)) return cat;
+    return null;
+  }
+  function classifyST(ncm, cestNota, dataNota) {
+    const n = digits(ncm);
+    const c = digits(cestNota);
+    let hit = null;
+    if (c && CEST_IDX.has(c)) {
+      hit = CEST_IDX.get(c)[0];
+    } else if (n) {
+      for (const row of ST) {
+        if (row[0] && n.startsWith(row[0])) { hit = row; break; }
+      }
+    }
+    if (!hit) return null;
+    const anexo = hit[2];
+    const itemFim = hit[3] || ANEXOS[anexo].fim;
+    const on = vigente(itemFim, dataNota);
+    return {
+      anexo,
+      nome: ANEXOS[anexo].nome,
+      cestTab: hit[1],
+      fim: itemFim,
+      vigente: on
+    };
+  }
+
+  function kids(el, name) {
+    if (!el) return [];
+    const out = [];
+    const all = el.getElementsByTagName("*");
+    for (let i = 0; i < all.length; i++) if (all[i].localName === name) out.push(all[i]);
+    return out;
+  }
+  function first(el, name) {
+    if (!el) return null;
+    if (el.localName === name) return el;
+    return kids(el, name)[0] || null;
+  }
+  function text(el, name) {
+    const n = first(el, name);
+    return n ? (n.textContent || "").trim() : "";
+  }
+  function num(el, name) {
+    const n = parseFloat(text(el, name).replace(",", "."));
+    return Number.isFinite(n) ? n : 0;
+  }
+  function parseDate(s) {
+    if (!s) return null;
+    const dt = new Date(s.slice(0,10) + "T00:00:00");
+    return Number.isNaN(+dt) ? null : dt;
+  }
+
+  function parseXml(xmlText, fileName) {
+    const doc = new DOMParser().parseFromString(xmlText, "text/xml");
+    if (doc.querySelector("parsererror")) throw new Error("XML inválido");
+    const inf = first(doc.documentElement, "infNFe");
+    if (!inf) throw new Error("Não é NF-e/NFC-e (ausente infNFe)");
+    const ide = first(inf, "ide");
+    const emit = first(inf, "emit");
+    const prot = first(doc.documentElement, "protNFe");
+    const cStat = prot ? text(prot, "cStat") : "";
+    const dh = text(ide, "dhEmi") || text(ide, "dEmi");
+    const data = parseDate(dh);
+    const nota = {
+      arquivo: fileName,
+      chave: (inf.getAttribute("Id") || "").replace(/^NFe/i, ""),
+      numero: text(ide, "nNF"),
+      serie: text(ide, "serie"),
+      modelo: text(ide, "mod"),
+      data, dataRaw: dh,
+      emitNome: text(emit, "xNome"),
+      emitCNPJ: text(emit, "CNPJ") || text(emit, "CPF"),
+      crt: text(emit, "CRT"),
+      cStat,
+      cancelada: ["101","151","155","135"].includes(cStat),
+      itens: []
+    };
+    const dets = [...inf.children].filter(n => n.localName === "det");
+    for (let i = 0; i < dets.length; i++) {
+      const prod = first(dets[i], "prod");
+      if (!prod) continue;
+      const vProd = num(prod, "vProd");
+      const vDesc = num(prod, "vDesc");
+      const cfop = text(prod, "CFOP");
+      const ncm = digits(text(prod, "NCM"));
+      const cest = digits(text(prod, "CEST"));
+      const cat = classifyMono(ncm);
+      const st = classifyST(ncm, cest, data);
+      nota.itens.push({
+        codigo: text(prod, "cProd"),
+        produto: text(prod, "xProd"),
+        ncm,
+        ncmFmt: ncm.length === 8 ? ncm.replace(/(\d{4})(\d{2})(\d{2})/, "$1.$2.$3") : ncm,
+        cestNota: cest,
+        cestFmt: cest.length === 7 ? cest.replace(/(\d{2})(\d{3})(\d{2})/, "$1.$2.$3") : cest,
+        cfop,
+        saida: /^[56]/.test(cfop),
+        uCom: text(prod, "uCom"),
+        qtd: num(prod, "qCom"),
+        vProd, vDesc,
+        vLiq: Math.max(0, +(vProd - vDesc).toFixed(2)),
+        categoria: cat,
+        monofasico: !!cat,
+        st
+      });
+    }
+    return nota;
+  }
+
+  const state = { files: [], notas: [], erros: [], sortKey: "nota", sortDir: 1 };
+  const $ = id => document.getElementById(id);
+
+  function crtLabel(c) {
+    return ({1:"1 — Simples Nacional",2:"2 — SN excesso de sublimite",3:"3 — Regime Normal",4:"4 — MEI"})[c] || (c || "não informado");
+  }
+  function escapeHtml(s) {
+    return String(s ?? "").replace(/[&<>"']/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[ch]));
+  }
+  function csvCell(v) {
+    const s = String(v ?? "");
+    return /[;"\n]/.test(s) ? `"${s.replace(/"/g,'""')}"` : s;
+  }
+
+  function collectFiles(list) {
+    const arr = Array.from(list || []).filter(f => /\.xml$/i.test(f.name) || (f.type||"").includes("xml"));
+    const seen = new Set(state.files.map(f => f.name + f.size));
+    for (const f of arr) {
+      const k = f.name + f.size;
+      if (!seen.has(k)) { state.files.push(f); seen.add(k); }
+    }
+    $("fileList").innerHTML = state.files.map(f =>
+      `<li><span>${escapeHtml(f.name)}</span><span class="meta">${(f.size/1024).toFixed(1)} KB</span></li>`
+    ).join("");
+    $("btnProcess").disabled = !state.files.length;
+    $("btnClear").disabled = !state.files.length && !state.notas.length;
+  }
+
+  const drop = $("drop");
+  drop.addEventListener("dragover", e => { e.preventDefault(); drop.classList.add("drag"); });
+  drop.addEventListener("dragleave", () => drop.classList.remove("drag"));
+  drop.addEventListener("drop", e => { e.preventDefault(); drop.classList.remove("drag"); collectFiles(e.dataTransfer.files); });
+  $("files").addEventListener("change", e => collectFiles(e.target.files));
+  $("btnClear").addEventListener("click", () => {
+    state.files = []; state.notas = []; state.erros = [];
+    $("files").value = ""; $("fileList").innerHTML = "";
+    $("emitBox").textContent = "Nenhum XML processado.";
+    $("kpis").hidden = $("catCard").hidden = $("stCard").hidden = $("tableCard").hidden = true;
+    $("btnProcess").disabled = $("btnCsv").disabled = $("btnClear").disabled = true;
+  });
+  $("btnProcess").addEventListener("click", async () => {
+    state.notas = []; state.erros = [];
+    for (const f of state.files) {
+      try { state.notas.push(parseXml(await f.text(), f.name)); }
+      catch (err) { state.erros.push({ arquivo: f.name, erro: err.message || String(err) }); }
+    }
+    renderAll();
+  });
+
+  function allSaleItems() {
+    const rows = [];
+    for (const n of state.notas) {
+      if (n.cancelada) continue;
+      for (const it of n.itens) {
+        if (!it.saida) continue;
+        rows.push({ nota: n.numero, serie: n.serie, modelo: n.modelo, chave: n.chave, data: n.data, dataRaw: n.dataRaw, arquivo: n.arquivo, ...it });
+      }
+    }
+    return rows;
+  }
+
+  function renderAll() {
+    const notasOk = state.notas.filter(n => !n.cancelada);
+    const emitentes = new Map();
+    for (const n of notasOk) {
+      const k = n.emitCNPJ || n.emitNome;
+      if (!emitentes.has(k)) emitentes.set(k, { nome: n.emitNome, cnpj: n.emitCNPJ, crt: n.crt, q: 0 });
+      emitentes.get(k).q++;
+    }
+    const emitHtml = [...emitentes.values()].map(e =>
+      `<div><strong>${escapeHtml(e.nome || "—")}</strong><br>CNPJ/CPF: <code>${escapeHtml(e.cnpj || "—")}</code> · CRT: <code>${escapeHtml(crtLabel(e.crt))}</code> · ${e.q} nota(s)</div>`
+    ).join("<hr style='border:0;border-top:1px dashed var(--line);margin:10px 0'>");
+    const errHtml = state.erros.length
+      ? `<p style="color:var(--danger);margin-top:10px">${state.erros.map(e => `• ${escapeHtml(e.arquivo)} — ${escapeHtml(e.erro)}`).join("<br>")}</p>` : "";
+    const canc = state.notas.filter(n => n.cancelada).length;
+    $("emitBox").innerHTML = (emitHtml || "Nenhuma NF-e válida.") +
+      (canc ? `<p class="meta">${canc} nota(s) cancelada(s) ignorada(s).</p>` : "") + errHtml;
+
+    const rows = allSaleItems();
+    const mono = rows.filter(r => r.monofasico);
+    const stOn = rows.filter(r => r.st && r.st.vigente);
+    const recTotal = rows.reduce((s,r) => s + r.vLiq, 0);
+    const recMono = mono.reduce((s,r) => s + r.vLiq, 0);
+    const recSt = stOn.reduce((s,r) => s + r.vLiq, 0);
+    $("kpiTotal").textContent = BRL.format(recTotal);
+    $("kpiMono").textContent = BRL.format(recMono);
+    $("kpiSt").textContent = BRL.format(recSt);
+    $("kpiOutras").textContent = BRL.format(recTotal - recMono);
+    $("kpiNotas").textContent = `${notasOk.length} nota(s) · ${rows.length} item(ns) de saída`;
+    $("kpiMonoPct").textContent = recTotal ? `${(recMono/recTotal*100).toFixed(1).replace(".",",")}% da receita` : "";
+    $("kpiStPct").textContent = recTotal ? `${(recSt/recTotal*100).toFixed(1).replace(".",",")}% da receita · anexo vigente na emissão` : "";
+    $("barMono").style.width = (recTotal ? Math.min(100, recMono/recTotal*100) : 0) + "%";
+
+    const byCat = {};
+    for (const k of Object.keys(CATS)) byCat[k] = { qtdItens:0, qtd:0, valor:0 };
+    for (const r of mono) { byCat[r.categoria].qtdItens++; byCat[r.categoria].qtd += r.qtd; byCat[r.categoria].valor += r.vLiq; }
+    $("catBody").innerHTML = Object.entries(CATS).map(([k,label]) => {
+      const c = byCat[k];
+      return `<tr><td><span class="badge ${CAT_CLASS[k]}">${label}</span></td><td class="num">${c.qtdItens}</td><td class="num">${N3.format(c.qtd)}</td><td class="num">${BRL.format(c.valor)}</td></tr>`;
+    }).join("");
+
+    const byAnx = {};
+    for (const r of rows.filter(x => x.st)) {
+      const a = r.st.anexo;
+      if (!byAnx[a]) byAnx[a] = { itens:0, valor:0, on:0 };
+      byAnx[a].itens++; byAnx[a].valor += r.vLiq; if (r.st.vigente) byAnx[a].on++;
+    }
+    $("stBody").innerHTML = Object.keys(ANEXOS).filter(a => byAnx[a]).map(a => {
+      const c = byAnx[a]; const meta = ANEXOS[a];
+      const sit = meta.fim
+        ? (c.on ? `vigente até ${meta.fim.split("-").reverse().join("/")} (${c.on}/${c.itens} itens)` : `revogado a partir de ${meta.fim.split("-").reverse().join("/")}`)
+        : "vigente";
+      return `<tr><td>Anexo ${a}</td><td>${meta.nome}</td><td class="num">${c.itens}</td><td class="num">${BRL.format(c.valor)}</td><td>${sit}</td></tr>`;
+    }).join("") || `<tr><td colspan="5" class="empty">Nenhum item com NCM/CEST da CAT 68.</td></tr>`;
+
+    $("kpis").hidden = $("catCard").hidden = $("stCard").hidden = $("tableCard").hidden = false;
+    $("btnCsv").disabled = !rows.length;
+    $("btnClear").disabled = false;
+    renderTable();
+  }
+
+  function visibleRows() {
+    const modo = $("filtro").value;
+    const q = ($("q").value || "").trim().toLowerCase();
+    let rows = allSaleItems();
+    if (modo === "interesse") rows = rows.filter(r => r.monofasico || (r.st && r.st.vigente));
+    if (modo === "mono") rows = rows.filter(r => r.monofasico);
+    if (modo === "st") rows = rows.filter(r => r.st && r.st.vigente);
+    if (q) rows = rows.filter(r =>
+      (r.produto||"").toLowerCase().includes(q) ||
+      (r.ncm||"").includes(q.replace(/\D/g,"")) ||
+      (r.nota||"").includes(q) ||
+      (r.cestNota||"").includes(q.replace(/\D/g,"")) ||
+      (r.st && (`anexo ${r.st.anexo} ${r.st.nome}`).toLowerCase().includes(q)) ||
+      (r.categoria && CATS[r.categoria].toLowerCase().includes(q))
+    );
+    const k = state.sortKey, dir = state.sortDir;
+    rows.sort((a,b) => {
+      let va = a[k], vb = b[k];
+      if (k === "categoria") { va = CATS[a.categoria]||""; vb = CATS[b.categoria]||""; }
+      if (k === "stNome") { va = a.st ? a.st.nome : ""; vb = b.st ? b.st.nome : ""; }
+      if (k === "data") { va = a.data ? +a.data : 0; vb = b.data ? +b.data : 0; }
+      if (typeof va === "string") return va.localeCompare(vb, "pt-BR") * dir;
+      return ((va||0)-(vb||0))*dir;
+    });
+    return rows;
+  }
+
+  function renderTable() {
+    const rows = visibleRows();
+    $("emptyTbl").hidden = rows.length > 0;
+    $("tbody").innerHTML = rows.map(r => {
+      const cat = r.categoria ? `<span class="badge ${CAT_CLASS[r.categoria]}">${CATS[r.categoria]}</span>` : `<span class="badge">—</span>`;
+      let st = "—";
+      if (r.st) {
+        const cls = r.st.vigente ? "c-st" : "c-off";
+        const extra = r.st.vigente ? "" : " (revogado na data)";
+        st = `<span class="badge ${cls}">${r.st.anexo} · ${r.st.nome}${extra}</span>`;
+        if (r.st.cestTab) st += `<div class="hint">CEST tab. ${r.st.cestTab.replace(/(\d{2})(\d{3})(\d{2})/,"$1.$2.$3")}</div>`;
+      }
+      const dt = r.data instanceof Date ? DTF.format(r.data) : (r.dataRaw||"").slice(0,10);
+      return `<tr>
+        <td>${escapeHtml(r.nota)}/${escapeHtml(r.serie)}<div class="hint">mod. ${escapeHtml(r.modelo)} · CFOP ${escapeHtml(r.cfop)}</div></td>
+        <td>${escapeHtml(dt)}</td>
+        <td>${escapeHtml(r.produto)}<div class="hint">${escapeHtml(r.codigo)}</div></td>
+        <td><code>${escapeHtml(r.ncmFmt || r.ncm || "—")}</code></td>
+        <td>${r.cestFmt ? `<code>${escapeHtml(r.cestFmt)}</code>` : "—"}</td>
+        <td>${cat}</td>
+        <td>${st}</td>
+        <td class="num">${N3.format(r.qtd)} <span class="hint">${escapeHtml(r.uCom)}</span></td>
+        <td class="num">${BRL.format(r.vLiq)}</td>
+      </tr>`;
+    }).join("");
+  }
+
+  $("q").addEventListener("input", renderTable);
+  $("filtro").addEventListener("change", renderTable);
+  document.querySelectorAll("th[data-k]").forEach(th => th.addEventListener("click", () => {
+    const k = th.dataset.k;
+    if (state.sortKey === k) state.sortDir *= -1; else { state.sortKey = k; state.sortDir = 1; }
+    renderTable();
+  }));
+
+  $("btnCsv").addEventListener("click", () => {
+    const rows = visibleRows();
+    const head = ["Nota","Serie","Modelo","Data","Chave","Codigo","Produto","NCM","CEST_nota","CFOP","PIS_COFINS_mono","Categoria_mono","ST_SP","Anexo_CAT68","CEST_tabela","ST_vigente_na_emissao","Quantidade","Unidade","vProd","vDesc","Valor_liquido"];
+    const lines = [head.join(";")];
+    for (const r of rows) {
+      const dt = r.data instanceof Date ? r.data.toISOString().slice(0,10) : (r.dataRaw||"").slice(0,10);
+      lines.push([
+        r.nota, r.serie, r.modelo, dt, r.chave, r.codigo, r.produto, r.ncmFmt||r.ncm, r.cestFmt||"",
+        r.cfop, r.monofasico ? "SIM" : "NAO", r.categoria ? CATS[r.categoria] : "",
+        r.st ? r.st.nome : "", r.st ? r.st.anexo : "", r.st && r.st.cestTab ? r.st.cestTab : "",
+        r.st ? (r.st.vigente ? "SIM" : "NAO") : "",
+        String(r.qtd).replace(".",","), r.uCom,
+        String(r.vProd).replace(".",","), String(r.vDesc).replace(".",","), String(r.vLiq).replace(".",",")
+      ].map(csvCell).join(";"));
+    }
+    const blob = new Blob(["\uFEFF"+lines.join("\r\n")], { type: "text/csv;charset=utf-8" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "segregacao-mono-e-st-sp.csv";
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+})();
+</script>
+</body>
+</html>
